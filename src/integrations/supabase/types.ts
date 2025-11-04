@@ -14,7 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      colleges: {
+        Row: {
+          contact_email: string | null
+          created_at: string | null
+          id: string
+          location: string | null
+          name: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          college_id: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          college_id?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          college_id?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quiz_registrations: {
+        Row: {
+          attendance_status: string | null
+          id: string
+          quiz_id: string | null
+          registered_at: string | null
+          student_id: string | null
+        }
+        Insert: {
+          attendance_status?: string | null
+          id?: string
+          quiz_id?: string | null
+          registered_at?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          attendance_status?: string | null
+          id?: string
+          quiz_id?: string | null
+          registered_at?: string | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_registrations_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_registrations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          college_id: string | null
+          conducted_by: string | null
+          created_at: string | null
+          current_participants: number | null
+          description: string | null
+          end_time: string | null
+          id: string
+          max_participants: number | null
+          quiz_date: string
+          start_time: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          college_id?: string | null
+          conducted_by?: string | null
+          created_at?: string | null
+          current_participants?: number | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          max_participants?: number | null
+          quiz_date: string
+          start_time: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          college_id?: string | null
+          conducted_by?: string | null
+          created_at?: string | null
+          current_participants?: number | null
+          description?: string | null
+          end_time?: string | null
+          id?: string
+          max_participants?: number | null
+          quiz_date?: string
+          start_time?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quizzes_conducted_by_fkey"
+            columns: ["conducted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +178,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "hod" | "director" | "faculty" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +305,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "hod", "director", "faculty", "student"],
+    },
   },
 } as const
