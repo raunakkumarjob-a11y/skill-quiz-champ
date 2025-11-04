@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Menu, X } from "lucide-react";
+import { GraduationCap, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -11,6 +16,17 @@ const Navigation = () => {
       element.scrollIntoView({ behavior: "smooth" });
       setIsMenuOpen(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out successfully");
+    navigate("/");
+  };
+
+  const handleDashboard = () => {
+    navigate("/dashboard");
+    setIsMenuOpen(false);
   };
 
   return (
@@ -51,10 +67,33 @@ const Navigation = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline">Login</Button>
-            <Button className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
-              Register
-            </Button>
+            {user ? (
+              <>
+                <Button variant="outline" onClick={handleDashboard}>
+                  Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSignOut}
+                  className="gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => navigate("/auth")}>
+                  Login
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                  onClick={() => navigate("/auth")}
+                >
+                  Register
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -89,10 +128,33 @@ const Navigation = () => {
                 Contact
               </button>
               <div className="flex flex-col gap-2 px-4 pt-2">
-                <Button variant="outline" className="w-full">Login</Button>
-                <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
-                  Register
-                </Button>
+                {user ? (
+                  <>
+                    <Button variant="outline" className="w-full" onClick={handleDashboard}>
+                      Dashboard
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
+                      Login
+                    </Button>
+                    <Button
+                      className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                      onClick={() => navigate("/auth")}
+                    >
+                      Register
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
