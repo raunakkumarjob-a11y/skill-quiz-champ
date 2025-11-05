@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      college_connection_requests: {
+        Row: {
+          college_name: string
+          created_at: string | null
+          designation: string
+          email: string
+          id: string
+          location: string
+          name: string
+          phone: string
+          reason: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          college_name: string
+          created_at?: string | null
+          designation: string
+          email: string
+          id?: string
+          location: string
+          name: string
+          phone: string
+          reason: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          college_name?: string
+          created_at?: string | null
+          designation?: string
+          email?: string
+          id?: string
+          location?: string
+          name?: string
+          phone?: string
+          reason?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       colleges: {
         Row: {
           contact_email: string | null
@@ -170,12 +212,39 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "hod" | "director" | "faculty" | "student"

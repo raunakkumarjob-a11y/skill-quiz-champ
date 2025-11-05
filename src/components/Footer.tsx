@@ -29,8 +29,8 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Mail className="h-4 w-4" />
-              <a href="mailto:support@skillquizlab.in" className="hover:text-primary transition-colors">
-                support@skillquizlab.in
+              <a href="mailto:worktracker75@gmail.com" className="hover:text-primary transition-colors">
+                worktracker75@gmail.com
               </a>
             </div>
           </div>
@@ -67,23 +67,23 @@ const Footer = () => {
             <h3 className="font-semibold text-foreground mb-4">Legal & Social</h3>
             <ul className="space-y-2 mb-4">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                <a href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                <a href="/terms-of-service" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                <a href="mailto:worktracker75@gmail.com" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Contact Us
                 </a>
               </li>
             </ul>
             <div className="flex items-center gap-3">
-              <a href="#" className="w-10 h-10 bg-primary/10 hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-all">
+              <a href="https://www.linkedin.com/company/skill-quiz-lab/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-primary/10 hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-all">
                 <Linkedin className="h-5 w-5" />
               </a>
               <a href="#" className="w-10 h-10 bg-primary/10 hover:bg-primary hover:text-primary-foreground rounded-lg flex items-center justify-center transition-all">

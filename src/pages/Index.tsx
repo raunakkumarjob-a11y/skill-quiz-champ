@@ -4,6 +4,7 @@ import FeaturesSection from "@/components/FeaturesSection";
 import CollegeConnectSection from "@/components/CollegeConnectSection";
 import QuizScheduleSection from "@/components/QuizScheduleSection";
 import AdvantagesSection from "@/components/AdvantagesSection";
+import StatsSection from "@/components/StatsSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -12,6 +13,7 @@ const Index = () => {
       <Navigation />
       <main>
         <HeroSection />
+        <StatsSection />
         <FeaturesSection />
         <CollegeConnectSection />
         <QuizScheduleSection />

@@ -29,6 +29,11 @@ const Navigation = () => {
     setIsMenuOpen(false);
   };
 
+  const handleAdminPortal = () => {
+    navigate("/admin");
+    setIsMenuOpen(false);
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
@@ -71,6 +76,9 @@ const Navigation = () => {
               <>
                 <Button variant="outline" onClick={handleDashboard}>
                   Dashboard
+                </Button>
+                <Button variant="outline" onClick={handleAdminPortal}>
+                  Admin
                 </Button>
                 <Button
                   variant="outline"
@@ -132,6 +140,9 @@ const Navigation = () => {
                   <>
                     <Button variant="outline" className="w-full" onClick={handleDashboard}>
                       Dashboard
+                    </Button>
+                    <Button variant="outline" className="w-full" onClick={handleAdminPortal}>
+                      Admin Portal
                     </Button>
                     <Button
                       variant="outline"
