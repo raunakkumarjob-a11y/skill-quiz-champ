@@ -70,6 +70,22 @@ const AdminPortal = () => {
     }
   };
 
+  const updateQuizStatus = async (id: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from("quizzes")
+        .update({ status })
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success(`Quiz marked as ${status}`);
+      fetchData();
+    } catch (error) {
+      console.error("Error updating quiz:", error);
+      toast.error("Failed to update quiz status");
+    }
+  };
+
   const deleteQuiz = async (id: string) => {
     try {
       const { error } = await supabase.from("quizzes").delete().eq("id", id);
@@ -205,7 +221,8 @@ const AdminPortal = () => {
                       <TableHead>Title</TableHead>
                       <TableHead>College</TableHead>
                       <TableHead>Conductor</TableHead>
-                      <TableHead>Date</TableHead>
+                      <TableHead>Date & Time</TableHead>
+                      <TableHead>Participants</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -213,17 +230,54 @@ const AdminPortal = () => {
                   <TableBody>
                     {quizzes.map((quiz) => (
                       <TableRow key={quiz.id}>
-                        <TableCell>{quiz.title}</TableCell>
+                        <TableCell className="font-medium">{quiz.title}</TableCell>
                         <TableCell>{quiz.colleges?.name || 'N/A'}</TableCell>
                         <TableCell>{quiz.profiles?.full_name || 'N/A'}</TableCell>
-                        <TableCell>{new Date(quiz.quiz_date).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <Badge>{quiz.status}</Badge>
+                          <div className="text-sm">
+                            <div>{new Date(quiz.quiz_date).toLocaleDateString()}</div>
+                            <div className="text-muted-foreground">
+                              {quiz.start_time} {quiz.end_time && `- ${quiz.end_time}`}
+                            </div>
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Button size="sm" variant="destructive" onClick={() => deleteQuiz(quiz.id)}>
-                            Delete
-                          </Button>
+                          <div className="text-sm">
+                            {quiz.current_participants || 0}
+                            {quiz.max_participants && ` / ${quiz.max_participants}`}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            quiz.status === 'completed' ? 'default' : 
+                            quiz.status === 'ongoing' ? 'secondary' : 
+                            quiz.status === 'cancelled' ? 'destructive' : 
+                            'outline'
+                          }>
+                            {quiz.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-2">
+                            {quiz.status === 'scheduled' && (
+                              <Button size="sm" onClick={() => updateQuizStatus(quiz.id, 'ongoing')}>
+                                Start Quiz
+                              </Button>
+                            )}
+                            {quiz.status === 'ongoing' && (
+                              <Button size="sm" onClick={() => updateQuizStatus(quiz.id, 'completed')}>
+                                Complete
+                              </Button>
+                            )}
+                            {(quiz.status === 'scheduled' || quiz.status === 'ongoing') && (
+                              <Button size="sm" variant="outline" onClick={() => updateQuizStatus(quiz.id, 'cancelled')}>
+                                Cancel
+                              </Button>
+                            )}
+                            <Button size="sm" variant="destructive" onClick={() => deleteQuiz(quiz.id)}>
+                              Delete
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
