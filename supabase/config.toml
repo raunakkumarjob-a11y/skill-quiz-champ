@@ -1,1 +1,7 @@
 project_id = "phubdleljqtwwpbafjem"
+
+[functions.send-credentials]
+verify_jwt = false
+
+[functions.approve-college-request]
+verify_jwt = false

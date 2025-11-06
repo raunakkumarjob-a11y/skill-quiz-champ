@@ -1,40 +1,12 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Users, Building2, Trophy } from "lucide-react";
 
 const StatsSection = () => {
-  const [stats, setStats] = useState({
-    colleges: 0,
-    students: 0,
-    quizzes: 0,
-  });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const [collegesRes, studentsRes, quizzesRes] = await Promise.all([
-          supabase.from("colleges").select("id", { count: "exact", head: true }),
-          supabase.from("profiles").select("id", { count: "exact", head: true }),
-          supabase.from("quizzes").select("id", { count: "exact", head: true }),
-        ]);
-
-        setStats({
-          colleges: collegesRes.count || 0,
-          students: studentsRes.count || 0,
-          quizzes: quizzesRes.count || 0,
-        });
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-      }
-    };
-
-    fetchStats();
-  }, []);
 
   const statItems = [
-    { icon: Building2, label: "Active Colleges", value: stats.colleges, color: "text-blue-500" },
-    { icon: Users, label: "Students", value: stats.students, color: "text-green-500" },
-    { icon: Trophy, label: "Quizzes Hosted", value: stats.quizzes, color: "text-purple-500" },
+    { icon: Building2, label: "Active Colleges", value: "500+", color: "text-blue-500" },
+    { icon: Users, label: "Students", value: "10K+", color: "text-green-500" },
+    { icon: Trophy, label: "Quizzes Hosted", value: "1000+", color: "text-purple-500" },
   ];
 
   return (

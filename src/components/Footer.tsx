@@ -1,4 +1,4 @@
-import { GraduationCap, Mail, Linkedin, Instagram, Youtube } from "lucide-react";
+import { GraduationCap, Mail, Linkedin, Instagram, Youtube, Building2, Users, Trophy } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -13,7 +13,7 @@ const Footer = () => {
   return (
     <footer id="footer" className="bg-gradient-to-br from-card to-muted border-t border-border">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
@@ -60,6 +60,34 @@ const Footer = () => {
                 </button>
               </li>
             </ul>
+          </div>
+
+          {/* Careers */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-4">Careers</h3>
+            <div className="space-y-4 mb-6">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold">500+</p>
+                  <p className="text-sm text-muted-foreground">Active Colleges</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold">10K+</p>
+                  <p className="text-sm text-muted-foreground">Students</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Trophy className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold">1000+</p>
+                  <p className="text-sm text-muted-foreground">Quizzes Hosted</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Legal & Social */}

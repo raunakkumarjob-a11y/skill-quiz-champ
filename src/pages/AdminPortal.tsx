@@ -55,18 +55,44 @@ const AdminPortal = () => {
   };
 
   const updateRequestStatus = async (id: string, status: string) => {
+    if (status !== "approved") {
+      try {
+        const { error } = await supabase
+          .from("college_connection_requests")
+          .update({ status })
+          .eq("id", id);
+
+        if (error) throw error;
+        toast.success(`Request ${status}`);
+        fetchData();
+      } catch (error) {
+        console.error("Error updating request:", error);
+        toast.error("Failed to update request");
+      }
+      return;
+    }
+
+    // Handle approval with auto-credential generation via edge function
     try {
-      const { error } = await supabase
-        .from("college_connection_requests")
-        .update({ status })
-        .eq("id", id);
+      const { data, error } = await supabase.functions.invoke("approve-college-request", {
+        body: { requestId: id },
+      });
 
       if (error) throw error;
-      toast.success(`Request ${status}`);
+
+      if (data?.credentials) {
+        toast.success(
+          `Request approved! Credentials sent to user.\nEmail: ${data.credentials.email}\nPassword: ${data.credentials.password}`,
+          { duration: 15000 }
+        );
+      } else {
+        toast.success("Request approved successfully!");
+      }
+      
       fetchData();
     } catch (error) {
-      console.error("Error updating request:", error);
-      toast.error("Failed to update request");
+      console.error("Error approving request:", error);
+      toast.error("Failed to approve request: " + (error as Error).message);
     }
   };
 

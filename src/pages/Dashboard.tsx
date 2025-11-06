@@ -345,7 +345,7 @@ const Dashboard = () => {
                         {quiz.colleges?.name} • {new Date(quiz.quiz_date).toLocaleDateString()} • {quiz.start_time}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                     <div className="flex items-center gap-3">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
                           quiz.status === "scheduled"
@@ -357,6 +357,42 @@ const Dashboard = () => {
                       >
                         {quiz.status}
                       </span>
+                      <div className="flex gap-2">
+                        {quiz.status === "scheduled" && (
+                          <>
+                            <Button size="sm" onClick={async () => {
+                              const { error } = await supabase.from("quizzes").update({ status: "ongoing" }).eq("id", quiz.id);
+                              if (error) toast.error("Failed to start quiz");
+                              else { toast.success("Quiz started"); fetchQuizzes(); }
+                            }}>
+                              Start
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={async () => {
+                              const { error } = await supabase.from("quizzes").update({ status: "cancelled" }).eq("id", quiz.id);
+                              if (error) toast.error("Failed to cancel quiz");
+                              else { toast.success("Quiz cancelled"); fetchQuizzes(); }
+                            }}>
+                              Cancel
+                            </Button>
+                          </>
+                        )}
+                        {quiz.status === "ongoing" && (
+                          <Button size="sm" onClick={async () => {
+                            const { error } = await supabase.from("quizzes").update({ status: "completed" }).eq("id", quiz.id);
+                            if (error) toast.error("Failed to complete quiz");
+                            else { toast.success("Quiz completed"); fetchQuizzes(); }
+                          }}>
+                            Complete
+                          </Button>
+                        )}
+                        <Button size="sm" variant="destructive" onClick={async () => {
+                          const { error } = await supabase.from("quizzes").delete().eq("id", quiz.id);
+                          if (error) toast.error("Failed to delete quiz");
+                          else { toast.success("Quiz deleted"); fetchQuizzes(); }
+                        }}>
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
