@@ -103,49 +103,68 @@ Content-Type: text/html; charset=utf-8
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
 
-    // Helper function to send command and read response
-    const sendCommand = async (command: string) => {
-      await conn.write(encoder.encode(command + "\r\n"));
-      const buffer = new Uint8Array(1024);
+    const readResponse = async () => {
+      const buffer = new Uint8Array(4096);
       const n = await conn.read(buffer);
       if (n) {
         const response = decoder.decode(buffer.subarray(0, n));
-        console.log("SMTP Response:", response);
+        console.log("SMTP:", response.trim());
         return response;
       }
       return "";
     };
 
-    // SMTP conversation
-    await sendCommand(`EHLO ${smtpHost}`);
-    await sendCommand("STARTTLS");
-    
-    // Upgrade connection to TLS
-    const tlsConn = await Deno.startTls(conn, { hostname: smtpHost });
-    
-    const sendTlsCommand = async (command: string) => {
-      await tlsConn.write(encoder.encode(command + "\r\n"));
-      const buffer = new Uint8Array(1024);
-      const n = await tlsConn.read(buffer);
-      if (n) {
-        const response = decoder.decode(buffer.subarray(0, n));
-        console.log("TLS SMTP Response:", response);
-        return response;
-      }
-      return "";
+    const sendCommand = async (command: string) => {
+      await conn.write(encoder.encode(command + "\r\n"));
+      return await readResponse();
     };
 
-    await sendTlsCommand(`EHLO ${smtpHost}`);
-    await sendTlsCommand("AUTH LOGIN");
-    await sendTlsCommand(btoa(smtpUser));
-    await sendTlsCommand(btoa(smtpPassword));
-    await sendTlsCommand(`MAIL FROM:<${smtpUser}>`);
-    await sendTlsCommand(`RCPT TO:<${to}>`);
-    await sendTlsCommand("DATA");
-    await sendTlsCommand(emailContent + "\r\n.");
-    await sendTlsCommand("QUIT");
+    try {
+      // Read server greeting
+      await readResponse();
+      
+      // SMTP conversation
+      await sendCommand(`EHLO ${smtpHost}`);
+      await sendCommand("STARTTLS");
+      
+      // Upgrade connection to TLS
+      const tlsConn = await Deno.startTls(conn, { hostname: smtpHost });
+      
+      const tlsReadResponse = async () => {
+        const buffer = new Uint8Array(4096);
+        const n = await tlsConn.read(buffer);
+        if (n) {
+          const response = decoder.decode(buffer.subarray(0, n));
+          console.log("TLS SMTP:", response.trim());
+          return response;
+        }
+        return "";
+      };
 
-    tlsConn.close();
+      const sendTlsCommand = async (command: string) => {
+        await tlsConn.write(encoder.encode(command + "\r\n"));
+        return await tlsReadResponse();
+      };
+
+      await sendTlsCommand(`EHLO ${smtpHost}`);
+      await sendTlsCommand("AUTH LOGIN");
+      await sendTlsCommand(btoa(smtpUser));
+      await sendTlsCommand(btoa(smtpPassword));
+      await sendTlsCommand(`MAIL FROM:<${smtpUser}>`);
+      await sendTlsCommand(`RCPT TO:<${to}>`);
+      await sendTlsCommand("DATA");
+      
+      // Send email content and terminate with CRLF.CRLF
+      await tlsConn.write(encoder.encode(emailContent + "\r\n.\r\n"));
+      await tlsReadResponse();
+      
+      await sendTlsCommand("QUIT");
+
+      tlsConn.close();
+    } catch (error) {
+      conn.close();
+      throw error;
+    }
 
     console.log("Email sent successfully");
 

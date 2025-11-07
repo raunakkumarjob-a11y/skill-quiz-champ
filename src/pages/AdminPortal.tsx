@@ -57,13 +57,36 @@ const AdminPortal = () => {
   const updateRequestStatus = async (id: string, status: string) => {
     if (status !== "approved") {
       try {
+        // Get request details for rejection email
+        const { data: request } = await supabase
+          .from("college_connection_requests")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        // Update status
         const { error } = await supabase
           .from("college_connection_requests")
           .update({ status })
           .eq("id", id);
 
         if (error) throw error;
-        toast.success(`Request ${status}`);
+
+        // Send rejection email if rejected
+        if (status === "rejected" && request) {
+          await supabase.functions.invoke("send-rejection-email", {
+            body: {
+              to: request.email,
+              name: request.name,
+              collegeName: request.college_name,
+              reason: "After review, we cannot approve this request at this time.",
+            },
+          });
+          toast.success("Request rejected and notification sent");
+        } else {
+          toast.success(`Request ${status}`);
+        }
+        
         fetchData();
       } catch (error) {
         console.error("Error updating request:", error);

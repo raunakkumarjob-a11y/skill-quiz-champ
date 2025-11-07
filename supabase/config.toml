@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.approve-college-request]
 verify_jwt = false
+
+[functions.send-rejection-email]
+verify_jwt = false
