@@ -57,19 +57,29 @@ serve(async (req) => {
 
     console.log("Creating user:", userEmail);
 
-    // Create Supabase auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: userEmail,
-      password: generatedPassword,
-      email_confirm: true,
-      user_metadata: {
-        full_name: request.name,
-      }
-    });
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === userEmail);
 
-    if (authError) throw authError;
+    let authData;
+    if (existingUser) {
+      console.log("User already exists:", existingUser.id);
+      authData = { user: existingUser };
+    } else {
+      // Create Supabase auth user
+      const { data: newAuthData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: userEmail,
+        password: generatedPassword,
+        email_confirm: true,
+        user_metadata: {
+          full_name: request.name,
+        }
+      });
 
-    console.log("User created:", authData.user.id);
+      if (authError) throw authError;
+      authData = newAuthData;
+      console.log("User created:", authData.user.id);
+    }
 
     // Create college entry
     const { data: collegeData, error: collegeError } = await supabaseAdmin
