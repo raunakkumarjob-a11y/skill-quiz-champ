@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, GraduationCap, Users } from "lucide-react";
+import { ArrowRight, Calendar, GraduationCap, Briefcase } from "lucide-react";
 import heroImage from "@/assets/hero-bg.jpg";
 
 const HeroSection = () => {
@@ -38,18 +38,18 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-            <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity group min-w-[200px]">
-              <Users className="mr-2 h-5 w-5" />
-              Join as Student
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button size="lg" variant="outline" className="min-w-[200px] border-2 hover:bg-primary hover:text-primary-foreground transition-all">
+            <Button size="lg" variant="outline" className="min-w-[200px] border-2 hover:bg-primary hover:text-primary-foreground transition-all" onClick={() => document.getElementById('college-connect')?.scrollIntoView({ behavior: 'smooth' })}>
               <GraduationCap className="mr-2 h-5 w-5" />
-              Host Quiz for College
+              List of Connected Colleges
             </Button>
-            <Button size="lg" variant="outline" className="min-w-[200px] border-2 hover:bg-secondary hover:text-secondary-foreground transition-all">
+            <Button size="lg" variant="outline" className="min-w-[200px] border-2 hover:bg-secondary hover:text-secondary-foreground transition-all" onClick={() => document.getElementById('calendar')?.scrollIntoView({ behavior: 'smooth' })}>
               <Calendar className="mr-2 h-5 w-5" />
               Check Schedule
+            </Button>
+            <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity group min-w-[200px]" onClick={() => document.getElementById('career')?.scrollIntoView({ behavior: 'smooth' })}>
+              <Briefcase className="mr-2 h-5 w-5" />
+              Career
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
 
