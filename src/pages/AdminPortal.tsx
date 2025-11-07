@@ -124,6 +124,34 @@ const AdminPortal = () => {
     }
   };
 
+  const toggleAdminRole = async (userId: string, currentRole: string) => {
+    try {
+      if (currentRole === 'admin') {
+        // Remove admin role
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("role", "admin");
+
+        if (error) throw error;
+        toast.success("Admin role removed");
+      } else {
+        // Add admin role
+        const { error } = await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: "admin" });
+
+        if (error) throw error;
+        toast.success("User promoted to admin");
+      }
+      fetchData();
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      toast.error("Failed to update user role");
+    }
+  };
+
   if (roleLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -216,6 +244,7 @@ const AdminPortal = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Joined</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -227,6 +256,15 @@ const AdminPortal = () => {
                           <Badge>{user.role}</Badge>
                         </TableCell>
                         <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Button 
+                            size="sm" 
+                            variant={user.role === 'admin' ? 'destructive' : 'default'}
+                            onClick={() => toggleAdminRole(user.id, user.role)}
+                          >
+                            {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
