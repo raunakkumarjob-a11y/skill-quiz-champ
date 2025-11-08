@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Plus, Users, Trophy, TrendingUp } from "lucide-react";
+import { Calendar, Plus, Users, Trophy, TrendingUp, UserCircle, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ const Dashboard = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const [newQuiz, setNewQuiz] = useState({
     title: "",
@@ -131,14 +132,59 @@ const Dashboard = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome to Your{" "}
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Dashboard
-            </span>
-          </h1>
-          <p className="text-muted-foreground">Manage your quizzes and view schedules</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome to Your{" "}
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Dashboard
+              </span>
+            </h1>
+            <p className="text-muted-foreground">Manage your quizzes and view schedules</p>
+          </div>
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => window.open("https://attandance-app.netlify.app/", "_blank")}
+              className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+            >
+              <ClipboardList className="mr-2 h-5 w-5" />
+              Attendance
+            </Button>
+            <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-2">
+                  <UserCircle className="mr-2 h-5 w-5" />
+                  Profile
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>User Profile</DialogTitle>
+                  <DialogDescription>Your account information</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Email</Label>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">User ID</Label>
+                    <p className="text-sm text-muted-foreground font-mono text-xs break-all">{user?.id}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Full Name</Label>
+                    <p className="text-sm text-muted-foreground">{user?.user_metadata?.full_name || "N/A"}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Account Created</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Stats */}

@@ -46,7 +46,7 @@ const HeroSection = () => {
               <Calendar className="mr-2 h-5 w-5" />
               Check Schedule
             </Button>
-            <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity group min-w-[200px]" onClick={() => document.getElementById('career')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity group min-w-[200px]" onClick={() => window.open('https://skilljobportal.netlify.app/', '_blank')}>
               <Briefcase className="mr-2 h-5 w-5" />
               Career
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

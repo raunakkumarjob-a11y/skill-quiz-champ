@@ -98,7 +98,7 @@ const CareerSection = () => {
             variant="outline" 
             size="lg" 
             className="border-2 hover:bg-primary hover:text-primary-foreground transition-all"
-            onClick={() => window.open("https://example.com/careers", "_blank")}
+            onClick={() => window.open("https://skilljobportal.netlify.app/", "_blank")}
           >
             View All Openings
             <ExternalLink className="ml-2 h-5 w-5" />
