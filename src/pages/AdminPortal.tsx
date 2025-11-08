@@ -7,8 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Shield } from "lucide-react";
+import { Loader2, Shield, Upload, Image as ImageIcon } from "lucide-react";
 
 const AdminPortal = () => {
   const navigate = useNavigate();
@@ -17,6 +20,10 @@ const AdminPortal = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -175,6 +182,92 @@ const AdminPortal = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedQuiz || !imageFile) {
+      toast.error("Please select an image");
+      return;
+    }
+
+    try {
+      // Delete old image if exists
+      if (selectedQuiz.image_url) {
+        const oldFileName = selectedQuiz.image_url.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage.from('quiz-images').remove([oldFileName]);
+        }
+      }
+
+      // Upload new image
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('quiz-images')
+        .upload(filePath, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('quiz-images')
+        .getPublicUrl(filePath);
+
+      // Update quiz with new image URL
+      const { error: updateError } = await supabase
+        .from("quizzes")
+        .update({ image_url: publicUrl })
+        .eq("id", selectedQuiz.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Image uploaded successfully");
+      setIsUploadDialogOpen(false);
+      setImageFile(null);
+      setImagePreview(null);
+      setSelectedQuiz(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("Failed to upload image");
+    }
+  };
+
+  const deleteQuizImage = async (quiz: any) => {
+    if (!quiz.image_url) return;
+
+    try {
+      const fileName = quiz.image_url.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('quiz-images').remove([fileName]);
+      }
+
+      const { error } = await supabase
+        .from("quizzes")
+        .update({ image_url: null })
+        .eq("id", quiz.id);
+
+      if (error) throw error;
+
+      toast.success("Image deleted successfully");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error("Failed to delete image");
+    }
+  };
+
   if (roleLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -305,6 +398,7 @@ const AdminPortal = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Image</TableHead>
                       <TableHead>Title</TableHead>
                       <TableHead>College</TableHead>
                       <TableHead>Conductor</TableHead>
@@ -317,6 +411,19 @@ const AdminPortal = () => {
                   <TableBody>
                     {quizzes.map((quiz) => (
                       <TableRow key={quiz.id}>
+                        <TableCell>
+                          {quiz.image_url ? (
+                            <img 
+                              src={quiz.image_url} 
+                              alt={quiz.title} 
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
+                              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell className="font-medium">{quiz.title}</TableCell>
                         <TableCell>{quiz.colleges?.name || 'N/A'}</TableCell>
                         <TableCell>{quiz.profiles?.full_name || 'N/A'}</TableCell>
@@ -346,6 +453,26 @@ const AdminPortal = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedQuiz(quiz);
+                                setIsUploadDialogOpen(true);
+                              }}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              {quiz.image_url ? 'Update' : 'Add'} Image
+                            </Button>
+                            {quiz.image_url && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => deleteQuizImage(quiz)}
+                              >
+                                Remove Image
+                              </Button>
+                            )}
                             {quiz.status === 'scheduled' && (
                               <Button size="sm" onClick={() => updateQuizStatus(quiz.id, 'ongoing')}>
                                 Start Quiz
@@ -374,6 +501,68 @@ const AdminPortal = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Upload Quiz Image</DialogTitle>
+              <DialogDescription>
+                Add or update the image for "{selectedQuiz?.title}"
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {selectedQuiz?.image_url && !imagePreview && (
+                <div>
+                  <Label>Current Image</Label>
+                  <img 
+                    src={selectedQuiz.image_url} 
+                    alt="Current" 
+                    className="w-full max-h-60 object-cover rounded-lg mt-2"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="quiz-image">Select New Image</Label>
+                <Input
+                  id="quiz-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </div>
+              {imagePreview && (
+                <div>
+                  <Label>Preview</Label>
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full max-h-60 object-cover rounded-lg mt-2"
+                  />
+                </div>
+              )}
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={handleImageUpload}
+                  disabled={!imageFile}
+                  className="flex-1"
+                >
+                  Upload
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsUploadDialogOpen(false);
+                    setImageFile(null);
+                    setImagePreview(null);
+                    setSelectedQuiz(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

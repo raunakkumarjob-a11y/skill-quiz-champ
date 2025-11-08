@@ -25,6 +25,7 @@ interface Quiz {
   quiz_date: string;
   start_time: string;
   status: string;
+  image_url?: string;
   colleges: { name: string };
 }
 
@@ -46,6 +47,8 @@ const Dashboard = () => {
     end_time: "",
     max_participants: "",
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     fetchColleges();
@@ -74,6 +77,7 @@ const Dashboard = () => {
         quiz_date,
         start_time,
         status,
+        image_url,
         colleges(name)
       `)
       .eq("conducted_by", user?.id)
@@ -83,6 +87,18 @@ const Dashboard = () => {
       console.error("Error fetching quizzes:", error);
     } else {
       setQuizzes(data || []);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -96,6 +112,31 @@ const Dashboard = () => {
 
     setIsLoading(true);
 
+    let imageUrl = null;
+
+    // Upload image if provided
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('quiz-images')
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        toast.error("Failed to upload image: " + uploadError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('quiz-images')
+        .getPublicUrl(filePath);
+
+      imageUrl = publicUrl;
+    }
+
     const { error } = await supabase.from("quizzes").insert({
       title: newQuiz.title,
       description: newQuiz.description,
@@ -105,6 +146,7 @@ const Dashboard = () => {
       start_time: newQuiz.start_time,
       end_time: newQuiz.end_time || null,
       max_participants: newQuiz.max_participants ? parseInt(newQuiz.max_participants) : null,
+      image_url: imageUrl,
     });
 
     setIsLoading(false);
@@ -123,6 +165,8 @@ const Dashboard = () => {
         end_time: "",
         max_participants: "",
       });
+      setImageFile(null);
+      setImagePreview(null);
       fetchQuizzes();
     }
   };
@@ -359,6 +403,21 @@ const Dashboard = () => {
                       </div>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="image">Quiz Image (Optional)</Label>
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                      {imagePreview && (
+                        <div className="mt-2">
+                          <img src={imagePreview} alt="Preview" className="max-h-40 rounded-lg" />
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex gap-3 pt-4">
                       <Button type="submit" className="flex-1 bg-gradient-to-r from-primary to-secondary" disabled={isLoading}>
                         {isLoading ? "Creating..." : "Create Quiz"}
@@ -383,8 +442,15 @@ const Dashboard = () => {
                 {quizzes.map((quiz) => (
                   <div
                     key={quiz.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
+                    {quiz.image_url && (
+                      <img 
+                        src={quiz.image_url} 
+                        alt={quiz.title} 
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                    )}
                     <div className="flex-1">
                       <h3 className="font-semibold">{quiz.title}</h3>
                       <p className="text-sm text-muted-foreground">

@@ -158,6 +158,7 @@ export type Database = {
           description: string | null
           end_time: string | null
           id: string
+          image_url: string | null
           max_participants: number | null
           quiz_date: string
           start_time: string
@@ -173,6 +174,7 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          image_url?: string | null
           max_participants?: number | null
           quiz_date: string
           start_time: string
@@ -188,6 +190,7 @@ export type Database = {
           description?: string | null
           end_time?: string | null
           id?: string
+          image_url?: string | null
           max_participants?: number | null
           quiz_date?: string
           start_time?: string

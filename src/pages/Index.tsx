@@ -6,6 +6,7 @@ import AdvantagesSection from "@/components/AdvantagesSection";
 import StatsSection from "@/components/StatsSection";
 import HostedQuizzesSection from "@/components/HostedQuizzesSection";
 import QuizCalendarView from "@/components/QuizCalendarView";
+import QuizImagesSection from "@/components/QuizImagesSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
         <CollegeConnectSection />
         <HostedQuizzesSection />
         <QuizCalendarView />
+        <QuizImagesSection />
         <AdvantagesSection />
       </main>
       <Footer />
