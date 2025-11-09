@@ -8,6 +8,8 @@ import HostedQuizzesSection from "@/components/HostedQuizzesSection";
 import QuizCalendarView from "@/components/QuizCalendarView";
 import QuizImagesSection from "@/components/QuizImagesSection";
 import EventMemoriesSection from "@/components/EventMemoriesSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import TestimonialForm from "@/components/TestimonialForm";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -23,6 +25,8 @@ const Index = () => {
         <QuizCalendarView />
         <QuizImagesSection />
         <EventMemoriesSection />
+        <TestimonialsSection />
+        <TestimonialForm />
         <AdvantagesSection />
       </main>
       <Footer />

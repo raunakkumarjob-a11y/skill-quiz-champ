@@ -22,6 +22,7 @@ const AdminPortal = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [memories, setMemories] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -49,22 +50,25 @@ const AdminPortal = () => {
 
   const fetchData = async () => {
     try {
-      const [requestsRes, usersRes, quizzesRes, memoriesRes] = await Promise.all([
+      const [requestsRes, usersRes, quizzesRes, memoriesRes, testimonialsRes] = await Promise.all([
         supabase.from("college_connection_requests").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("quizzes").select("*, colleges(name), profiles(full_name)").order("created_at", { ascending: false }),
-        supabase.from("event_memories").select("*").order("created_at", { ascending: false })
+        supabase.from("event_memories").select("*").order("created_at", { ascending: false }),
+        supabase.from("testimonials").select("*").order("created_at", { ascending: false })
       ]);
 
       if (requestsRes.error) throw requestsRes.error;
       if (usersRes.error) throw usersRes.error;
       if (quizzesRes.error) throw quizzesRes.error;
       if (memoriesRes.error) throw memoriesRes.error;
+      if (testimonialsRes.error) throw testimonialsRes.error;
 
       setConnectionRequests(requestsRes.data || []);
       setUsers(usersRes.data || []);
       setQuizzes(quizzesRes.data || []);
       setMemories(memoriesRes.data || []);
+      setTestimonials(testimonialsRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
@@ -351,6 +355,44 @@ const AdminPortal = () => {
     }
   };
 
+  const updateTestimonialStatus = async (id: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from("testimonials")
+        .update({ status })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success(`Testimonial ${status} successfully`);
+      fetchData();
+    } catch (error) {
+      console.error("Error updating testimonial:", error);
+      toast.error("Failed to update testimonial");
+    }
+  };
+
+  const deleteTestimonial = async (id: string, imageUrl: string | null) => {
+    try {
+      if (imageUrl) {
+        const fileName = imageUrl.split("/").pop();
+        if (fileName) {
+          await supabase.storage.from("testimonial-images").remove([fileName]);
+        }
+      }
+
+      const { error } = await supabase.from("testimonials").delete().eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Testimonial deleted successfully");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      toast.error("Failed to delete testimonial");
+    }
+  };
+
   if (roleLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -370,11 +412,12 @@ const AdminPortal = () => {
         </div>
 
         <Tabs defaultValue="requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="requests">Connection Requests</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
             <TabsTrigger value="memories">Event Memories</TabsTrigger>
+            <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests">
@@ -636,6 +679,83 @@ const AdminPortal = () => {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="testimonials">
+            <Card>
+              <CardHeader>
+                <CardTitle>Testimonials ({testimonials.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Message</TableHead>
+                      <TableHead>Image</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {testimonials.map((testimonial) => (
+                      <TableRow key={testimonial.id}>
+                        <TableCell className="font-medium">{testimonial.name}</TableCell>
+                        <TableCell className="max-w-md">
+                          <p className="truncate">{testimonial.message}</p>
+                        </TableCell>
+                        <TableCell>
+                          {testimonial.image_url && (
+                            <img 
+                              src={testimonial.image_url} 
+                              alt={testimonial.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={testimonial.status === 'approved' ? 'default' : 'secondary'}>
+                            {testimonial.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(testimonial.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {testimonial.status === 'pending' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => updateTestimonialStatus(testimonial.id, 'approved')}
+                              >
+                                Approve
+                              </Button>
+                            )}
+                            {testimonial.status === 'approved' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => updateTestimonialStatus(testimonial.id, 'pending')}
+                              >
+                                Unpublish
+                              </Button>
+                            )}
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => deleteTestimonial(testimonial.id, testimonial.image_url)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>
