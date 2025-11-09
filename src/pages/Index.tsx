@@ -7,6 +7,7 @@ import StatsSection from "@/components/StatsSection";
 import HostedQuizzesSection from "@/components/HostedQuizzesSection";
 import QuizCalendarView from "@/components/QuizCalendarView";
 import QuizImagesSection from "@/components/QuizImagesSection";
+import EventMemoriesSection from "@/components/EventMemoriesSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -21,6 +22,7 @@ const Index = () => {
         <HostedQuizzesSection />
         <QuizCalendarView />
         <QuizImagesSection />
+        <EventMemoriesSection />
         <AdvantagesSection />
       </main>
       <Footer />

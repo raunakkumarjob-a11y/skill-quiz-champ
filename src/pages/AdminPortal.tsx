@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,14 +17,22 @@ import { Loader2, Shield, Upload, Image as ImageIcon } from "lucide-react";
 const AdminPortal = () => {
   const navigate = useNavigate();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  const { user } = useAuth();
   const [connectionRequests, setConnectionRequests] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [memories, setMemories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isMemoryDialogOpen, setIsMemoryDialogOpen] = useState(false);
+  const [newMemory, setNewMemory] = useState({
+    title: "",
+    description: "",
+    event_date: "",
+  });
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -40,19 +49,22 @@ const AdminPortal = () => {
 
   const fetchData = async () => {
     try {
-      const [requestsRes, usersRes, quizzesRes] = await Promise.all([
+      const [requestsRes, usersRes, quizzesRes, memoriesRes] = await Promise.all([
         supabase.from("college_connection_requests").select("*").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("quizzes").select("*, colleges(name), profiles(full_name)").order("created_at", { ascending: false })
+        supabase.from("quizzes").select("*, colleges(name), profiles(full_name)").order("created_at", { ascending: false }),
+        supabase.from("event_memories").select("*").order("created_at", { ascending: false })
       ]);
 
       if (requestsRes.error) throw requestsRes.error;
       if (usersRes.error) throw usersRes.error;
       if (quizzesRes.error) throw quizzesRes.error;
+      if (memoriesRes.error) throw memoriesRes.error;
 
       setConnectionRequests(requestsRes.data || []);
       setUsers(usersRes.data || []);
       setQuizzes(quizzesRes.data || []);
+      setMemories(memoriesRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
@@ -268,6 +280,77 @@ const AdminPortal = () => {
     }
   };
 
+  const handleMemoryUpload = async () => {
+    if (!imageFile || !newMemory.title) {
+      toast.error("Please provide title and select an image");
+      return;
+    }
+
+    try {
+      // Upload image
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('event-memories')
+        .upload(filePath, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('event-memories')
+        .getPublicUrl(filePath);
+
+      // Insert memory record
+      const { error: insertError } = await supabase
+        .from("event_memories")
+        .insert({
+          title: newMemory.title,
+          description: newMemory.description || null,
+          event_date: newMemory.event_date || null,
+          image_url: publicUrl,
+          uploaded_by: user?.id,
+        });
+
+      if (insertError) throw insertError;
+
+      toast.success("Memory uploaded successfully");
+      setIsMemoryDialogOpen(false);
+      setNewMemory({ title: "", description: "", event_date: "" });
+      setImageFile(null);
+      setImagePreview(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error uploading memory:", error);
+      toast.error("Failed to upload memory");
+    }
+  };
+
+  const deleteMemory = async (memory: any) => {
+    try {
+      // Delete image from storage
+      const fileName = memory.image_url.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('event-memories').remove([fileName]);
+      }
+
+      // Delete memory record
+      const { error } = await supabase
+        .from("event_memories")
+        .delete()
+        .eq("id", memory.id);
+
+      if (error) throw error;
+
+      toast.success("Memory deleted successfully");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting memory:", error);
+      toast.error("Failed to delete memory");
+    }
+  };
+
   if (roleLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -287,10 +370,11 @@ const AdminPortal = () => {
         </div>
 
         <Tabs defaultValue="requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="requests">Connection Requests</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+            <TabsTrigger value="memories">Event Memories</TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests">
@@ -500,8 +584,144 @@ const AdminPortal = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="memories">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Event Memories ({memories.length})</CardTitle>
+                  <Button onClick={() => setIsMemoryDialogOpen(true)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Memory
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {memories.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No memories uploaded yet</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {memories.map((memory) => (
+                      <Card key={memory.id} className="overflow-hidden">
+                        <CardContent className="p-0">
+                          <img 
+                            src={memory.image_url} 
+                            alt={memory.title}
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="p-4">
+                            <h3 className="font-semibold mb-1">{memory.title}</h3>
+                            {memory.description && (
+                              <p className="text-sm text-muted-foreground mb-2">{memory.description}</p>
+                            )}
+                            {memory.event_date && (
+                              <p className="text-xs text-muted-foreground mb-3">
+                                {new Date(memory.event_date).toLocaleDateString()}
+                              </p>
+                            )}
+                            <Button 
+                              size="sm" 
+                              variant="destructive" 
+                              onClick={() => deleteMemory(memory)}
+                              className="w-full"
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
+        {/* Memory Upload Dialog */}
+        <Dialog open={isMemoryDialogOpen} onOpenChange={setIsMemoryDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Upload Event Memory</DialogTitle>
+              <DialogDescription>
+                Add photos from your events and competitions
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="memory-title">Title *</Label>
+                <Input
+                  id="memory-title"
+                  placeholder="Event name"
+                  value={newMemory.title}
+                  onChange={(e) => setNewMemory({ ...newMemory, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memory-description">Description</Label>
+                <Input
+                  id="memory-description"
+                  placeholder="Brief description"
+                  value={newMemory.description}
+                  onChange={(e) => setNewMemory({ ...newMemory, description: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memory-date">Event Date</Label>
+                <Input
+                  id="memory-date"
+                  type="date"
+                  value={newMemory.event_date}
+                  onChange={(e) => setNewMemory({ ...newMemory, event_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memory-image">Image *</Label>
+                <Input
+                  id="memory-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </div>
+              {imagePreview && (
+                <div>
+                  <Label>Preview</Label>
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full max-h-60 object-cover rounded-lg mt-2"
+                  />
+                </div>
+              )}
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={handleMemoryUpload}
+                  disabled={!imageFile || !newMemory.title}
+                  className="flex-1"
+                >
+                  Upload
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsMemoryDialogOpen(false);
+                    setNewMemory({ title: "", description: "", event_date: "" });
+                    setImageFile(null);
+                    setImagePreview(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Quiz Image Upload Dialog */}
         <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
           <DialogContent>
             <DialogHeader>

@@ -80,6 +80,39 @@ export type Database = {
         }
         Relationships: []
       }
+      event_memories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          event_date: string | null
+          id: string
+          image_url: string
+          title: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          image_url: string
+          title: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          image_url?: string
+          title?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           college_id: string | null
