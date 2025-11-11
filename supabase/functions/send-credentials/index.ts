@@ -79,7 +79,7 @@ Content-Type: text/html; charset=utf-8
 
       <p><strong>Important:</strong> We recommend changing your password after your first login for security purposes.</p>
       
-      <p>You can now login at: <a href="${Deno.env.get("VITE_SUPABASE_URL")}/auth">Skill Quiz Lab</a></p>
+      <p>You can now login at: <a href="https://skill-quiz-lab.netlify.app/">Skill Quiz Lab</a></p>
       
       <p>If you have any questions or need assistance, please don't hesitate to contact us.</p>
       
