@@ -188,7 +188,7 @@ const Dashboard = () => {
           </div>
           <div className="flex gap-3">
             <Button 
-              onClick={() => window.open("https://attandance-app.netlify.app/", "_blank")}
+              onClick={() => window.open("https://qr-attandnce.vercel.app/", "_blank")}
               className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
             >
               <ClipboardList className="mr-2 h-5 w-5" />
