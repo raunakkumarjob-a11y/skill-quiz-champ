@@ -38,10 +38,15 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-            <Button size="lg" variant="outline" className="min-w-[200px] border-2 hover:bg-primary hover:text-primary-foreground transition-all" onClick={() => document.getElementById('college-connect')?.scrollIntoView({ behavior: 'smooth' })}>
-              <GraduationCap className="mr-2 h-5 w-5" />
-              List of Connected Colleges
-            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="min-w-[200px] border-2 hover:bg-primary hover:text-primary-foreground transition-all"
+              onClick={() => window.open("https://quizappresultportal.vercel.app/", "_blank")}
+>
+            <GraduationCap className="mr-2 h-5 w-5" />
+            View Result
+<          /Button>
             <Button size="lg" variant="outline" className="min-w-[200px] border-2 hover:bg-secondary hover:text-secondary-foreground transition-all" onClick={() => document.getElementById('calendar')?.scrollIntoView({ behavior: 'smooth' })}>
               <Calendar className="mr-2 h-5 w-5" />
               Check Schedule
