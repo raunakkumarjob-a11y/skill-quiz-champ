@@ -194,6 +194,13 @@ const Dashboard = () => {
               <ClipboardList className="mr-2 h-5 w-5" />
               Attendance
             </Button>
+             <Button 
+              onClick={() => window.open("https://edu-credential.vercel.app/", "_blank")}
+              className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+            >
+              <ClipboardList className="mr-2 h-5 w-5" />
+              Certificate
+            </Button>
             <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="border-2">
