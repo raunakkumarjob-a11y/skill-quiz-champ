@@ -3,15 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+
+interface Quiz {
+  id: string;
+  title: string;
+  quiz_date: string;
+  start_time: string;
+  status: string;
+  colleges: { name: string } | null;
+}
 
 interface QuizDate {
   date: string;
-  quizzes: Array<{
-    id: string;
-    title: string;
-    start_time: string;
-    colleges: { name: string };
-  }>;
+  quizzes: Quiz[];
 }
 
 const QuizCalendarView = () => {
@@ -39,10 +44,9 @@ const QuizCalendarView = () => {
         title,
         quiz_date,
         start_time,
+        status,
         colleges(name)
       `)
-      .eq("status", "scheduled")
-      .gte("quiz_date", new Date().toISOString().split("T")[0])
       .order("quiz_date", { ascending: true });
 
     if (error) {
@@ -66,12 +70,79 @@ const QuizCalendarView = () => {
     setQuizDates(grouped);
   };
 
+  // Get dates by status
+  const getDatesByStatus = (status: string) => {
+    return quizDates
+      .filter(q => q.quizzes.some(quiz => quiz.status === status))
+      .map(q => new Date(q.date));
+  };
+
+  const completedDates = getDatesByStatus("completed");
+  const scheduledDates = getDatesByStatus("scheduled");
+  const runningDates = getDatesByStatus("running");
+
   const modifiers = {
-    booked: quizDates.map(q => new Date(q.date))
+    completed: completedDates,
+    scheduled: scheduledDates,
+    running: runningDates
   };
 
   const modifiersClassNames = {
-    booked: "bg-red-500 text-white hover:bg-red-600"
+    completed: "bg-green-500 text-white hover:bg-green-600",
+    scheduled: "bg-yellow-500 text-white hover:bg-yellow-600",
+    running: "bg-blue-500 text-white hover:bg-blue-600"
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-500";
+      case "scheduled":
+        return "bg-yellow-500";
+      case "running":
+        return "bg-blue-500";
+      default:
+        return "bg-muted";
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "default" as const;
+      case "scheduled":
+        return "secondary" as const;
+      case "running":
+        return "destructive" as const;
+      default:
+        return "outline" as const;
+    }
+  };
+
+  const getStatusCardStyle = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "border-green-200 bg-green-50 dark:bg-green-950/20";
+      case "scheduled":
+        return "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20";
+      case "running":
+        return "border-blue-200 bg-blue-50 dark:bg-blue-950/20";
+      default:
+        return "border-muted";
+    }
+  };
+
+  const getStatusTextStyle = (status: string) => {
+    switch (status) {
+      case "completed":
+        return { title: "text-green-900 dark:text-green-100", sub: "text-green-700 dark:text-green-300" };
+      case "scheduled":
+        return { title: "text-yellow-900 dark:text-yellow-100", sub: "text-yellow-700 dark:text-yellow-300" };
+      case "running":
+        return { title: "text-blue-900 dark:text-blue-100", sub: "text-blue-700 dark:text-blue-300" };
+      default:
+        return { title: "text-foreground", sub: "text-muted-foreground" };
+    }
   };
 
   return (
@@ -85,16 +156,24 @@ const QuizCalendarView = () => {
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            View available and scheduled quiz dates
+            View quiz schedule and availability
           </p>
-          <div className="flex gap-4 justify-center mt-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span>Quiz Scheduled</span>
-            </div>
+          <div className="flex flex-wrap gap-4 justify-center mt-6 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span>Available Slot</span>
+              <span>Completed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+              <span>Scheduled</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-blue-500 rounded"></div>
+              <span>Running</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-muted border rounded"></div>
+              <span>Available</span>
             </div>
           </div>
         </div>
@@ -123,32 +202,44 @@ const QuizCalendarView = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {selectedDateQuizzes ? (
+              {selectedDateQuizzes && selectedDateQuizzes.quizzes.length > 0 ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-sm font-medium">Quiz Scheduled (Slot Taken)</span>
-                  </div>
-                  {selectedDateQuizzes.quizzes.map((quiz) => (
-                    <div key={quiz.id} className="p-4 border border-red-200 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                      <h4 className="font-semibold text-red-900 dark:text-red-100">{quiz.title}</h4>
-                      <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                        College: {quiz.colleges?.name}
-                      </p>
-                      <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                        Time: {quiz.start_time}
-                      </p>
-                    </div>
-                  ))}
+                  {selectedDateQuizzes.quizzes.map((quiz) => {
+                    const styles = getStatusTextStyle(quiz.status);
+                    return (
+                      <div 
+                        key={quiz.id} 
+                        className={`p-4 border rounded-lg ${getStatusCardStyle(quiz.status)}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className={`font-semibold ${styles.title}`}>{quiz.title}</h4>
+                          <Badge 
+                            variant={getStatusBadgeVariant(quiz.status)}
+                            className={`${getStatusColor(quiz.status)} text-white capitalize`}
+                          >
+                            {quiz.status}
+                          </Badge>
+                        </div>
+                        {quiz.colleges?.name && (
+                          <p className={`text-sm mt-1 ${styles.sub}`}>
+                            College: {quiz.colleges.name}
+                          </p>
+                        )}
+                        <p className={`text-sm mt-1 ${styles.sub}`}>
+                          Time: {quiz.start_time}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-green-700 dark:text-green-300">Available Slot</span>
+                    <div className="w-3 h-3 bg-muted border rounded-full"></div>
+                    <span className="text-sm font-medium text-muted-foreground">Available Slot</span>
                   </div>
                   <p className="text-muted-foreground">
-                    {date ? "No quizzes scheduled for this date" : "Select a date to view details"}
+                    {date ? "No quizzes scheduled for this date - slot available!" : "Select a date to view details"}
                   </p>
                 </div>
               )}
