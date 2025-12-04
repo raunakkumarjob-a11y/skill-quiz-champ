@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { ImageIcon, Calendar, Eye } from "lucide-react";
+import { ImageIcon, Calendar, Eye, X } from "lucide-react";
 
 interface Memory {
   id: string;
@@ -18,6 +18,7 @@ const EventMemoriesSection = () => {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [allMemories, setAllMemories] = useState<Memory[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<Memory | null>(null);
 
   useEffect(() => {
     fetchMemories();
@@ -79,7 +80,10 @@ const EventMemoriesSection = () => {
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <CardContent className="p-0">
-                    <div className="relative overflow-hidden">
+                    <div 
+                      className="relative overflow-hidden cursor-pointer"
+                      onClick={() => setSelectedImage(memory)}
+                    >
                       <img
                         src={memory.image_url}
                         alt={memory.title}
@@ -139,7 +143,8 @@ const EventMemoriesSection = () => {
                     <img
                       src={memory.image_url}
                       alt={memory.title}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setSelectedImage(memory)}
                     />
                     <div className="p-3">
                       <h3 className="font-semibold text-sm line-clamp-1">{memory.title}</h3>
@@ -159,6 +164,39 @@ const EventMemoriesSection = () => {
                 </Card>
               ))}
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Lightbox Dialog */}
+        <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+          <DialogContent className="max-w-4xl p-0 bg-background/95 backdrop-blur-sm border-none">
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute right-4 top-4 z-10 p-2 rounded-full bg-background/80 hover:bg-background transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {selectedImage && (
+              <div className="flex flex-col">
+                <img
+                  src={selectedImage.image_url}
+                  alt={selectedImage.title}
+                  className="w-full max-h-[70vh] object-contain"
+                />
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg">{selectedImage.title}</h3>
+                  {selectedImage.description && (
+                    <p className="text-muted-foreground mt-1">{selectedImage.description}</p>
+                  )}
+                  {selectedImage.event_date && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(selectedImage.event_date).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
