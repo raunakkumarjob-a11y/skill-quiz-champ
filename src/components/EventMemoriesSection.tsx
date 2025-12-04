@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { ImageIcon, Calendar } from "lucide-react";
+import { ImageIcon, Calendar, Eye } from "lucide-react";
 
 interface Memory {
   id: string;
@@ -14,6 +16,8 @@ interface Memory {
 
 const EventMemoriesSection = () => {
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [allMemories, setAllMemories] = useState<Memory[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchMemories();
@@ -29,6 +33,19 @@ const EventMemoriesSection = () => {
 
     if (!error && data) {
       setMemories(data);
+    }
+  };
+
+  const fetchAllMemories = async () => {
+    const { data, error } = await supabase
+      .from("event_memories")
+      .select("*")
+      .order("event_date", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setAllMemories(data);
+      setIsDialogOpen(true);
     }
   };
 
@@ -53,44 +70,97 @@ const EventMemoriesSection = () => {
             <p className="text-muted-foreground">No memories uploaded yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {memories.map((memory, index) => (
-              <Card 
-                key={memory.id}
-                className="group hover:shadow-lg transition-all duration-300 overflow-hidden animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {memories.map((memory, index) => (
+                <Card 
+                  key={memory.id}
+                  className="group hover:shadow-lg transition-all duration-300 overflow-hidden animate-fade-in-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <CardContent className="p-0">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={memory.image_url}
+                        alt={memory.title}
+                        className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                        <div className="p-4 w-full">
+                          <h3 className="font-semibold text-foreground mb-1 line-clamp-2">
+                            {memory.title}
+                          </h3>
+                          {memory.description && (
+                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                              {memory.description}
+                            </p>
+                          )}
+                          {memory.event_date && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(memory.event_date).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <Button
+                onClick={fetchAllMemories}
+                variant="outline"
+                className="border-2 hover:bg-primary hover:text-primary-foreground transition-all"
               >
-                <CardContent className="p-0">
-                  <div className="relative overflow-hidden">
+                <Eye className="mr-2 h-5 w-5" />
+                View More
+              </Button>
+            </div>
+          </>
+        )}
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                All Event{" "}
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  Memories
+                </span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+              {allMemories.map((memory) => (
+                <Card key={memory.id} className="overflow-hidden">
+                  <CardContent className="p-0">
                     <img
                       src={memory.image_url}
                       alt={memory.title}
-                      className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-48 object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                      <div className="p-4 w-full">
-                        <h3 className="font-semibold text-foreground mb-1 line-clamp-2">
-                          {memory.title}
-                        </h3>
-                        {memory.description && (
-                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                            {memory.description}
-                          </p>
-                        )}
-                        {memory.event_date && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(memory.event_date).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
+                    <div className="p-3">
+                      <h3 className="font-semibold text-sm line-clamp-1">{memory.title}</h3>
+                      {memory.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {memory.description}
+                        </p>
+                      )}
+                      {memory.event_date && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(memory.event_date).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   );
