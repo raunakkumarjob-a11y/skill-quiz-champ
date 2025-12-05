@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface Quiz {
   id: string;
@@ -19,10 +22,13 @@ interface QuizDate {
   quizzes: Quiz[];
 }
 
+const QUIZ_STATUSES = ["scheduled", "running", "completed", "cancelled"] as const;
+
 const QuizCalendarView = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [quizDates, setQuizDates] = useState<QuizDate[]>([]);
   const [selectedDateQuizzes, setSelectedDateQuizzes] = useState<QuizDate | null>(null);
+  const { isAdmin } = useUserRole();
 
   useEffect(() => {
     fetchQuizzes();
@@ -68,6 +74,22 @@ const QuizCalendarView = () => {
     }, []);
 
     setQuizDates(grouped);
+  };
+
+  const updateQuizStatus = async (quizId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from("quizzes")
+      .update({ status: newStatus })
+      .eq("id", quizId);
+
+    if (error) {
+      toast.error("Failed to update quiz status");
+      console.error("Error updating quiz status:", error);
+      return;
+    }
+
+    toast.success(`Quiz status updated to ${newStatus}`);
+    fetchQuizzes();
   };
 
   // Get dates by status
@@ -204,7 +226,7 @@ const QuizCalendarView = () => {
             <CardContent>
               {selectedDateQuizzes && selectedDateQuizzes.quizzes.length > 0 ? (
                 <div className="space-y-4">
-                  {selectedDateQuizzes.quizzes.map((quiz) => {
+              {selectedDateQuizzes.quizzes.map((quiz) => {
                     const styles = getStatusTextStyle(quiz.status);
                     return (
                       <div 
@@ -213,12 +235,30 @@ const QuizCalendarView = () => {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <h4 className={`font-semibold ${styles.title}`}>{quiz.title}</h4>
-                          <Badge 
-                            variant={getStatusBadgeVariant(quiz.status)}
-                            className={`${getStatusColor(quiz.status)} text-white capitalize`}
-                          >
-                            {quiz.status}
-                          </Badge>
+                          {isAdmin ? (
+                            <Select
+                              value={quiz.status}
+                              onValueChange={(value) => updateQuizStatus(quiz.id, value)}
+                            >
+                              <SelectTrigger className={`w-32 h-7 text-xs ${getStatusColor(quiz.status)} text-white border-0`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {QUIZ_STATUSES.map((status) => (
+                                  <SelectItem key={status} value={status} className="capitalize">
+                                    {status}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Badge 
+                              variant={getStatusBadgeVariant(quiz.status)}
+                              className={`${getStatusColor(quiz.status)} text-white capitalize`}
+                            >
+                              {quiz.status}
+                            </Badge>
+                          )}
                         </div>
                         {quiz.colleges?.name && (
                           <p className={`text-sm mt-1 ${styles.sub}`}>
