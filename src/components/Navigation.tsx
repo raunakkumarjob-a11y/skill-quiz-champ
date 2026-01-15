@@ -1,6 +1,7 @@
-import { GraduationCap, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import RadialMenu from "./RadialMenu";
+import logoImage from "@/assets/logo-transparent.png";
 
 const Navigation = () => {
   const [isRadialOpen, setIsRadialOpen] = useState(false);
@@ -12,9 +13,11 @@ const Navigation = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-lg">
-                <GraduationCap className="h-6 w-6 text-primary-foreground" />
-              </div>
+              <img 
+                src={logoImage} 
+                alt="Skill Quiz Lab Logo" 
+                className="h-12 w-auto object-contain"
+              />
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Skill Quiz Lab
               </span>
