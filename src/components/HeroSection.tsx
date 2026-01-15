@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, GraduationCap, Briefcase, Code2, Trophy, Sparkles } from "lucide-react";
+import { ArrowRight, Calendar, Briefcase, Code2, Trophy, Sparkles, Image } from "lucide-react";
 import ThreeBackground from "./ThreeBackground";
+import logoImage from "@/assets/logo-transparent.png";
 
 const HeroSection = () => {
   return (
@@ -10,6 +11,15 @@ const HeroSection = () => {
 
       <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
+          {/* Logo Display */}
+          <div className="flex justify-center mb-6 animate-fade-in">
+            <img 
+              src={logoImage} 
+              alt="Skill Quiz Lab Logo" 
+              className="h-28 md:h-36 w-auto object-contain drop-shadow-2xl"
+            />
+          </div>
+
           {/* Animated Badge */}
           <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 rounded-full mb-8 animate-fade-in backdrop-blur-sm">
             <Code2 className="w-4 h-4 text-primary animate-pulse" />
@@ -68,7 +78,7 @@ const HeroSection = () => {
               className="border-2 border-secondary/30 hover:border-secondary hover:bg-secondary/10 text-lg px-6 py-6 rounded-xl backdrop-blur-sm transition-all hover:scale-105"
               onClick={() => document.getElementById('images')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              <GraduationCap className="mr-2 h-5 w-5 text-secondary" />
+              <Image className="mr-2 h-5 w-5 text-secondary" />
               Gallery
             </Button>
 
