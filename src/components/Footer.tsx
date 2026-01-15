@@ -1,4 +1,5 @@
-import { GraduationCap, Mail, Linkedin, Instagram, Youtube, Building2, Users, Trophy } from "lucide-react";
+import { Mail, Linkedin, Instagram, Youtube, Building2, Users, Trophy } from "lucide-react";
+import logoImage from "@/assets/logo-transparent.png";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -16,10 +17,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-lg">
-                <GraduationCap className="h-6 w-6 text-primary-foreground" />
-              </div>
+            <div className="flex items-center gap-3 mb-4">
+              <img 
+                src={logoImage} 
+                alt="Skill Quiz Lab Logo" 
+                className="h-16 w-auto object-contain"
+              />
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Skill Quiz Lab
               </span>
