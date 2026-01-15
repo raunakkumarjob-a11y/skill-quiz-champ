@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { 
   Home, 
   BookOpen, 
@@ -11,7 +10,6 @@ import {
   LogOut, 
   LogIn, 
   UserPlus,
-  Menu,
   X
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,8 +23,12 @@ interface MenuItem {
   gradient: string;
 }
 
-const RadialMenu = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface RadialMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const RadialMenu = ({ isOpen, onClose }: RadialMenuProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -34,7 +36,7 @@ const RadialMenu = () => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
-      setIsOpen(false);
+      onClose();
     }
   };
 
@@ -42,12 +44,12 @@ const RadialMenu = () => {
     await signOut();
     toast.success("Signed out successfully");
     navigate("/");
-    setIsOpen(false);
+    onClose();
   };
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    setIsOpen(false);
+    onClose();
   };
 
   const baseMenuItems: MenuItem[] = [
@@ -73,24 +75,38 @@ const RadialMenu = () => {
   const allItems = [...baseMenuItems, ...authMenuItems];
   const itemCount = allItems.length;
   const angleStep = 360 / itemCount;
-  const radius = 140;
+  const radius = 160;
+
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[60]">
-      {/* Backdrop */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-background/60 backdrop-blur-sm transition-opacity duration-300"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      {/* Backdrop with blur */}
+      <div 
+        className="absolute inset-0 bg-background/80 backdrop-blur-md transition-opacity duration-500 animate-fade-in"
+        onClick={onClose}
+      />
 
-      {/* Menu Items */}
+      {/* Center glow effect */}
+      <div className="absolute w-80 h-80 rounded-full bg-gradient-to-br from-primary/30 via-secondary/20 to-accent/30 blur-3xl animate-pulse pointer-events-none" />
+
+      {/* Menu Container */}
       <div className="relative">
+        {/* Rotating ring decoration */}
+        <div 
+          className="absolute inset-0 w-[400px] h-[400px] -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 rounded-full border-2 border-dashed border-primary/30 animate-spin pointer-events-none"
+          style={{ animationDuration: '20s' }}
+        />
+        <div 
+          className="absolute inset-0 w-[340px] h-[340px] -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 rounded-full border border-secondary/20 animate-spin pointer-events-none"
+          style={{ animationDuration: '15s', animationDirection: 'reverse' }}
+        />
+
+        {/* Menu Items in Circle */}
         {allItems.map((item, index) => {
           const angle = (angleStep * index - 90) * (Math.PI / 180);
-          const x = isOpen ? Math.cos(angle) * radius : 0;
-          const y = isOpen ? Math.sin(angle) * radius : 0;
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
           const Icon = item.icon;
 
           return (
@@ -98,107 +114,71 @@ const RadialMenu = () => {
               key={item.label}
               onClick={item.action}
               className={`
-                absolute w-14 h-14 rounded-full 
+                absolute w-16 h-16 rounded-full 
                 bg-gradient-to-br ${item.gradient}
-                flex items-center justify-center
-                shadow-lg shadow-primary/20
+                flex flex-col items-center justify-center gap-1
+                shadow-xl shadow-black/20
                 transition-all duration-500 ease-out
-                hover:scale-110 hover:shadow-xl
-                ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
+                hover:scale-125 hover:shadow-2xl hover:z-10
+                group
+                animate-scale-in
               `}
               style={{
-                transform: `translate(${x}px, ${y}px) scale(${isOpen ? 1 : 0.3})`,
-                transitionDelay: isOpen ? `${index * 50}ms` : `${(itemCount - index) * 30}ms`,
+                transform: `translate(${x}px, ${y}px)`,
+                animationDelay: `${index * 60}ms`,
                 left: '50%',
                 top: '50%',
-                marginLeft: '-28px',
-                marginTop: '-28px',
+                marginLeft: '-32px',
+                marginTop: '-32px',
               }}
-              title={item.label}
             >
-              <Icon className="w-6 h-6 text-white" />
+              <Icon className="w-6 h-6 text-white drop-shadow-md" />
               
-              {/* Label tooltip */}
+              {/* Label that appears on hover */}
               <span 
-                className={`
-                  absolute -top-8 left-1/2 -translate-x-1/2
-                  bg-card text-foreground text-xs font-medium
-                  px-2 py-1 rounded-md whitespace-nowrap
-                  opacity-0 group-hover:opacity-100 pointer-events-none
-                  shadow-md border border-border
-                  transition-opacity duration-200
-                `}
+                className="
+                  absolute -bottom-8 left-1/2 -translate-x-1/2
+                  bg-card text-foreground text-xs font-semibold
+                  px-3 py-1.5 rounded-full whitespace-nowrap
+                  opacity-0 group-hover:opacity-100 
+                  transform translate-y-2 group-hover:translate-y-0
+                  transition-all duration-300
+                  shadow-lg border border-border
+                "
               >
                 {item.label}
               </span>
+
+              {/* Glow on hover */}
+              <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
           );
         })}
 
-        {/* Toggle Button */}
+        {/* Center Close Button */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`
-            relative w-16 h-16 rounded-full
+          onClick={onClose}
+          className="
+            absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+            w-20 h-20 rounded-full
             bg-gradient-to-br from-primary via-secondary to-accent
             flex items-center justify-center
-            shadow-2xl shadow-primary/40
-            transition-all duration-500 ease-out
-            hover:shadow-primary/60 hover:scale-105
-            z-10
-            ${isOpen ? 'rotate-180' : 'rotate-0'}
-          `}
-          style={{
-            animation: isOpen ? 'none' : 'pulse 2s infinite',
-          }}
+            shadow-2xl shadow-primary/50
+            transition-all duration-300
+            hover:scale-110 hover:rotate-90
+            z-20
+            animate-scale-in
+          "
         >
-          {/* Glow ring */}
-          <div 
-            className={`
-              absolute inset-0 rounded-full
-              bg-gradient-to-br from-primary via-secondary to-accent
-              animate-ping opacity-30
-              ${isOpen ? 'hidden' : 'block'}
-            `}
-          />
+          {/* Outer ring */}
+          <div className="absolute inset-0 rounded-full border-4 border-white/20" />
           
-          {/* Inner circle */}
-          <div 
-            className={`
-              absolute inset-1 rounded-full
-              bg-gradient-to-br from-primary to-secondary
-              transition-all duration-300
-            `}
-          />
+          {/* Inner glow */}
+          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
           
-          {/* Icon */}
-          <div className="relative z-10 transition-transform duration-300">
-            {isOpen ? (
-              <X className="w-7 h-7 text-primary-foreground" />
-            ) : (
-              <Menu className="w-7 h-7 text-primary-foreground" />
-            )}
-          </div>
-
-          {/* Rotating border */}
-          <div 
-            className={`
-              absolute inset-0 rounded-full border-2 border-dashed border-primary-foreground/30
-              transition-all duration-1000
-              ${isOpen ? 'animate-spin' : ''}
-            `}
-            style={{ animationDuration: '3s' }}
-          />
+          <X className="w-8 h-8 text-primary-foreground relative z-10" />
         </button>
       </div>
-
-      {/* Center glow effect when open */}
-      {isOpen && (
-        <div 
-          className="absolute inset-0 w-16 h-16 rounded-full bg-primary/20 blur-xl animate-pulse pointer-events-none"
-          style={{ left: '0', top: '0' }}
-        />
-      )}
     </div>
   );
 };
