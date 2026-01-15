@@ -11,6 +11,7 @@ import EventMemoriesSection from "@/components/EventMemoriesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import TestimonialForm from "@/components/TestimonialForm";
 import Footer from "@/components/Footer";
+import RadialMenu from "@/components/RadialMenu";
 
 const Index = () => {
   return (
@@ -30,6 +31,7 @@ const Index = () => {
         <AdvantagesSection />
       </main>
       <Footer />
+      <RadialMenu />
     </div>
   );
 };
